@@ -1,0 +1,6 @@
+env
+manage.py
+db.sqlite3
+__init__.py
+__pycache__
+migrations
