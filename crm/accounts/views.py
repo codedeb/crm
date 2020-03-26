@@ -1,8 +1,11 @@
-from django.shortcuts import render
-from . models import Customer, Order, Product
+from django.shortcuts import render, redirect
+from .models import Customer, Order, Product
 from django.views import generic, View
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from .forms import OrderForm
+from django.urls import reverse
+
 
 
 def homeView(request):
@@ -74,3 +77,81 @@ class CustomerView(generic.DetailView):
         context['orders'] = orders
         context['ordercount'] = ordercount
         return context
+
+def createorder(request):
+    form = OrderForm()
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+    else:
+        form = OrderForm()
+    context = {
+        'form' :form,
+    }
+    return render (request, 'accounts/order_form.html', context)
+
+def updateOrder(request, pk):
+    form = OrderForm()
+    try:
+        order = Order.objects.get(id=pk)
+    except Order.DoesNotExist:
+        raise Http404('Order DoesNot Exists')
+    form = OrderForm(instance=order)
+
+    if request.method == 'POST':
+        form = OrderForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+    
+    # form=OrderForm()
+    context  = {
+        'form' : form,
+    }
+    return render (request, 'accounts/order_form.html', context)
+
+def deleteOrder(request,pk):
+    try:
+        order = Order.objects.get(id=pk)
+    except Order.DoesNotExist:
+        raise Http404('Order DoesNot Exists')
+
+    if request.method =='POST':
+        order.delete()
+        return redirect('/')
+    context = {
+        'order' :order
+    }
+    return render(request, 'accounts/delete_form.html', context)
+
+class CreateOrder(generic.CreateView):
+    model = Order
+    template_name='accounts/order_form.html'
+    form_class = OrderForm
+    def get_success_url(self):
+        return ('/')
+
+class UpdateOrder(generic.UpdateView):
+    model = Order
+    template_name='accounts/order_form.html'
+    form_class = OrderForm
+    
+    def get_object(self):
+        id_ = self.kwargs.get('pk')
+        return get_object_or_404(Order, id=id_)
+
+    def get_success_url(self):
+        return ('/')
+
+class DeleteOrder(generic.DeleteView):
+    model = Order
+    template_name = 'accounts/delete_form.html'
+
+    def get_object(self):
+        id_ = self.kwargs.get('pk')
+        return get_object_or_404(Order, id=id_)
+
+    def get_success_url(self):
+        return reverse ('home_view')
