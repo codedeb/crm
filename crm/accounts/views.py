@@ -78,8 +78,9 @@ class CustomerView(generic.DetailView):
         context['ordercount'] = ordercount
         return context
 
-def createorder(request):
-    form = OrderForm()
+def createorder(request, pk):
+    customer= Customer.objects.get(id=pk)
+    form = OrderForm(initial={'customer':customer})
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
@@ -130,6 +131,7 @@ class CreateOrder(generic.CreateView):
     model = Order
     template_name='accounts/order_form.html'
     form_class = OrderForm
+
     def get_success_url(self):
         return ('/')
 
@@ -154,4 +156,4 @@ class DeleteOrder(generic.DeleteView):
         return get_object_or_404(Order, id=id_)
 
     def get_success_url(self):
-        return reverse ('home_view')
+        return ('/')
